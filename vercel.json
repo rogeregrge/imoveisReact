@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": ".qodo/package.json",
+        "use": "@vercel/static-build",
+        "config": { "distDir": ".qodo/dist" }
+      }
+    ],
+    "routes": [
+      { "src": "/(.*)", "dest": "/$1" }
+    ]
+}
