@@ -6,7 +6,12 @@ const formatCurrency = (value) => {
     if (typeof value !== 'number') {
         return value;
     }
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return value.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 0, // Remove as casas decimais
+        maximumFractionDigits: 0
+    }).replace(",", "."); // Substitui a vírgula por ponto
 };
 
 function App() {
@@ -99,11 +104,11 @@ function App() {
                                 <h2>{imovel.streetAddress || 'Endereço não informado'}</h2>
                                 <p><strong>Localização:</strong> {imovel.location || 'Não informada'}</p>
                                 <p><strong>Preço:</strong> {imovel.price !== undefined ? formatCurrency(imovel.price) : 'Não informado'}</p>
-                                <p><strong>IPTU:</strong> {imovel.iptu !== undefined ? formatCurrency(imovel.iptu) : 'Não informado'}</p>
+                                <p><strong>IPTU:</strong> {imovel.iptuTax !== undefined ? formatCurrency(imovel.iptuTax) : 'Não informado'}</p>
                                 <p><strong>Condomínio:</strong> {imovel.condominiumFee !== undefined ? formatCurrency(imovel.condominiumFee) : 'Não informado'}</p>
                                 <p><strong>Tamanho:</strong> {imovel.size ? `${imovel.size} m²` : 'Não informado'}</p>
-                                <p><strong>Banheiros:</strong> {imovel.bathrooms !== undefined ? imovel.bathrooms : 'Não informado'}</p>
-                                <p><strong>Vagas:</strong> {imovel.parkingSpaces !== undefined ? imovel.parkingSpaces : 'Não informado'}</p>
+                                <p><strong>Banheiros:</strong> {imovel.numberOfBathrooms !== undefined ? imovel.numberOfBathrooms : 'Não informado'}</p>
+                                <p><strong>Vagas:</strong> {imovel.numberOfParkingSpaces !== undefined ? imovel.numberOfParkingSpaces : 'Não informado'}</p>
                                 {imovel.link && (
                                     <a
                                         href={imovel.link}
@@ -115,7 +120,7 @@ function App() {
                                     </a>
                                 )}
                             </div>
-                        ))}\
+                        ))}
                     </div>
                 </>
             )}
