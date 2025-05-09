@@ -9,9 +9,9 @@ const formatCurrency = (value) => {
     return value.toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL',
-        minimumFractionDigits: 0, // Remove as casas decimais
+        minimumFractionDigits: 0,
         maximumFractionDigits: 0
-    }).replace(",", "."); // Substitui a vírgula por ponto
+    }).replace(",", ".");
 };
 
 function App() {
@@ -22,6 +22,13 @@ function App() {
     const fileInputRef = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredImoveis, setFilteredImoveis] = useState([]);
+    const [titleWord, setTitleWord] = useState("Scraper");
+    const words = ["Web Scraper", "Raspa Dados", "Quebra Imobiliaria"];
+    const [wordIndex, setWordIndex] = useState(0);
+    const [letterIndex, setLetterIndex] = useState(0);
+    const [isDeleting, setIsDeleting] = useState(true);
+    const [isTyping, setIsTyping] = useState(false);
+    const [pause, setPause] = useState(120);
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -55,6 +62,7 @@ function App() {
                 const conteudo = JSON.parse(e.target.result);
                 if (conteudo && Array.isArray(conteudo.data)) {
                     setImoveis(conteudo.data);
+                    setFilteredImoveis(conteudo.data);
                     setImoveisCarregados(true);
                 } else {
                     setErroArquivo("O arquivo JSON não contém uma estrutura de dados válida.");
@@ -67,42 +75,99 @@ function App() {
         reader.readAsText(file);
     };
 
-    useEffect(() => {
-        if (imoveisCarregados) {
-            const results = imoveis.filter(imovel =>
-                imovel.location.toLowerCase().includes(searchTerm.toLowerCase())
+    const handleSearch = (event) => {
+        const term = event.target.value;
+        setSearchTerm(term);
+        if (term === '') {
+            setFilteredImoveis(imoveis);
+        } else {
+            const filtered = imoveis.filter(imovel =>
+                imovel.location.toLowerCase().includes(term.toLowerCase()) ||
+                imovel.streetAddress.toLowerCase().includes(term.toLowerCase())
             );
-            setFilteredImoveis(results);
+            setFilteredImoveis(filtered);
         }
-    }, [imoveis, searchTerm, imoveisCarregados]);
+    };
+
+    useEffect(() => {
+        if (imoveis.length > 0) {
+            setFilteredImoveis(imoveis);
+        }
+    }, [imoveis]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            let newTitleWord = titleWord;
+
+            if (isDeleting) {
+                if (letterIndex > 0) {
+                    newTitleWord = titleWord.substring(0, letterIndex - 1);
+                    setTitleWord(newTitleWord);
+                    setLetterIndex(prevIndex => prevIndex - 1);
+                } else {
+                    setIsDeleting(false);
+                    setIsTyping(true);
+                    setWordIndex((prevIndex) => (prevIndex + 1) % words.length);
+                }
+            } else if (isTyping) {
+                if (letterIndex < words[wordIndex].length) {
+                    newTitleWord = words[wordIndex].substring(0, letterIndex + 1);
+                    setTitleWord(newTitleWord);
+                    setLetterIndex(prevIndex => prevIndex + 1);
+                } else {
+                    setIsTyping(false);
+                    setIsDeleting(true);
+                    setLetterIndex(0);
+                }
+            }
+        }, pause);
+
+        return () => clearTimeout(timer);
+    }, [letterIndex, isDeleting, isTyping, wordIndex, pause]);
+
+    const titleStyle = {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: '2em',
+    };
+
+    const changingWordStyle = {
+        color: 'yellow',
+        marginLeft: '0.2em',
+        marginRight: '0.2em',
+    };
+
+    const pipeStyle = {
+        color: 'white',
+        marginRight: '0.1em', // Ajustei a margem para mais perto
+    };
 
     return (
         <div className="App">
-            <h1>SuperExpansão Scraper</h1>
+            <h1 style={titleStyle}>
+                SuperExpansão
+                <span style={changingWordStyle}>{titleWord}</span>
+                <span style={pipeStyle}>|</span>
+            </h1>
             <input type="file" accept=".json" onChange={handleFileChange} ref={fileInputRef} />
             {erroArquivo && <p className="erro">{erroArquivo}</p>}
+            {nomeArquivo && <p>Arquivo selecionado: {nomeArquivo}</p>}
 
             {imoveisCarregados && (
                 <>
                     <input
                         type="text"
-                        placeholder="Pesquisar por cidade..."
+                        placeholder="Buscar por Localização ou Endereço"
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="search-bar"
+                        onChange={handleSearch}
+                        className="search-input"
                     />
                     <div className="imoveis-grid">
-                        {filteredImoveis.map((imovel, index) => (
-                            <div key={index} className="imovel-card">
-                                {imovel.image && (
-                                    <img
-                                        src={imovel.image}
-                                        alt={imovel.streetAddress || 'imóvel'}
-                                        style={{ width: '100%', height: '180px', objectFit: 'cover', marginBottom: '10px', borderRadius: '4px' }}
-                                    />
-                                )}
-                                <h2>{imovel.streetAddress || 'Endereço não informado'}</h2>
-                                <p><strong>Localização:</strong> {imovel.location || 'Não informada'}</p>
+                        {filteredImoveis.map(imovel => (
+                            <div key={imovel._id} className="imovel-card">
+                                {imovel.image && <img src={imovel.image} alt="Imóvel" />}
+                                <p><strong>Localização:</strong> {imovel.location}</p>
+                                <p><strong>Endereço:</strong> {imovel.streetAddress}</p>
                                 <p><strong>Preço:</strong> {imovel.price !== undefined ? formatCurrency(imovel.price) : 'Não informado'}</p>
                                 <p><strong>IPTU:</strong> {imovel.iptuTax !== undefined ? formatCurrency(imovel.iptuTax) : 'Não informado'}</p>
                                 <p><strong>Condomínio:</strong> {imovel.condominiumFee !== undefined ? formatCurrency(imovel.condominiumFee) : 'Não informado'}</p>
