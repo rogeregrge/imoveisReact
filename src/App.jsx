@@ -4,7 +4,7 @@ import './App.css';
 // Função auxiliar para formatar valores monetários
 const formatCurrency = (value) => {
     if (typeof value !== 'number') {
-        return value; // Retorna o valor original se não for um número
+        return value;
     }
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
@@ -15,8 +15,6 @@ function App() {
     const [nomeArquivo, setNomeArquivo] = useState("");
     const [erroArquivo, setErroArquivo] = useState(null);
     const fileInputRef = useRef(null);
-
-    // Novo estado para armazenar o termo de pesquisa e os imóveis filtrados
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredImoveis, setFilteredImoveis] = useState([]);
 
@@ -64,7 +62,6 @@ function App() {
         reader.readAsText(file);
     };
 
-    // Atualiza os imóveis filtrados sempre que `imoveis` ou `searchTerm` mudam
     useEffect(() => {
         if (imoveisCarregados) {
             const results = imoveis.filter(imovel =>
@@ -76,14 +73,12 @@ function App() {
 
     return (
         <div className="App">
-            <h1>SuperExpansão Imóveis</h1>
+            <h1>SuperExpansão Scraper</h1>
             <input type="file" accept=".json" onChange={handleFileChange} ref={fileInputRef} />
-
             {erroArquivo && <p className="erro">{erroArquivo}</p>}
 
             {imoveisCarregados && (
-                <div>
-                    {/* Barra de pesquisa */}
+                <>
                     <input
                         type="text"
                         placeholder="Pesquisar por cidade..."
@@ -91,7 +86,6 @@ function App() {
                         onChange={e => setSearchTerm(e.target.value)}
                         className="search-bar"
                     />
-
                     <div className="imoveis-grid">
                         {filteredImoveis.map((imovel, index) => (
                             <div key={index} className="imovel-card">
@@ -110,7 +104,6 @@ function App() {
                                 <p><strong>Tamanho:</strong> {imovel.size ? `${imovel.size} m²` : 'Não informado'}</p>
                                 <p><strong>Banheiros:</strong> {imovel.bathrooms !== undefined ? imovel.bathrooms : 'Não informado'}</p>
                                 <p><strong>Vagas:</strong> {imovel.parkingSpaces !== undefined ? imovel.parkingSpaces : 'Não informado'}</p>
-
                                 {imovel.link && (
                                     <a
                                         href={imovel.link}
@@ -122,9 +115,9 @@ function App() {
                                     </a>
                                 )}
                             </div>
-                        ))}
+                        ))}\
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
